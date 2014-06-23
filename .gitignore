@@ -1,0 +1,4 @@
+/.bundle/
+/lib/rejectu/*.so
+/lib/rejectu/*.bundle
+/tmp/*
