@@ -24,4 +24,9 @@ class TestRejectu < Test::Unit::TestCase
     refute Rejectu::valid? "teststri12\xf2\xa4\xb7\xa4"
   end
 
+  def test_non_utf8_string
+    assert_raises ArgumentError do
+      Rejectu::valid? "hello world".encode("ISO-8859-1")
+    end
+  end
 end
