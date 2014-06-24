@@ -49,7 +49,7 @@ is_valid(VALUE self, VALUE str)
     if (end - p < 16)
       break;
 
-    chunk = _mm_loadu_si128((__m128i *) p);
+    chunk = _mm_load_si128((__m128i *) p);
     /* check if the top bit of any of the bytes is set, which is 1 if the character is multibyte */
     mask = _mm_movemask_epi8(chunk);
     if (mask) {
