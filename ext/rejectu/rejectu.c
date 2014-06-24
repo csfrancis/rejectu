@@ -1,4 +1,5 @@
 #include <ruby.h>
+#include <ruby/encoding.h>
 #ifdef __SSE2__
 #include <emmintrin.h>
 #endif
@@ -14,16 +15,10 @@ has_utf8_supplementary_planes(__m128i v)
   return _mm_movemask_epi8(v) == 0 ? 0 : 1;
 }
 
-static VALUE
-is_valid(VALUE self, VALUE str)
+static inline void
+validate_utf8_input(VALUE str)
 {
   VALUE encoding;
-  unsigned char *p, *end;
-  long len, remain;
-#ifdef __SSE2__
-  __m128i chunk, part;
-  int mask;
-#endif
 
   Check_Type(str, T_STRING);
 
@@ -31,6 +26,19 @@ is_valid(VALUE self, VALUE str)
   if (TYPE(encoding) != T_STRING || strcmp(RSTRING_PTR(encoding), "UTF-8") != 0) {
     rb_raise(rb_eArgError, "input string is not UTF-8");
   }
+}
+
+static VALUE
+is_valid(VALUE self, VALUE str)
+{
+  unsigned char *p, *end;
+  long len, remain;
+#ifdef __SSE2__
+  __m128i chunk, part;
+  int mask;
+#endif
+
+  validate_utf8_input(str);
 
   len = RSTRING_LEN(str);
   p = RSTRING_PTR(str);
@@ -39,7 +47,7 @@ is_valid(VALUE self, VALUE str)
 #ifdef __SSE2__
   /* advance p until it's 16 byte aligned */
   while (((uintptr_t) p & 0xf) != 0) {
-    if ((*((unsigned char *) p) & 0xf0) == 0xf0) {
+    if ((*p & 0xf0) == 0xf0) {
       return Qfalse;
     }
     p++;
@@ -104,7 +112,7 @@ is_valid(VALUE self, VALUE str)
 
   remain = end - p;
   while (remain) {
-    if ((*((unsigned char *) p) & 0xf0) == 0xf0) {
+    if ((*p & 0xf0) == 0xf0) {
       return Qfalse;
     }
     p++;
@@ -114,12 +122,75 @@ is_valid(VALUE self, VALUE str)
   return Qtrue;
 }
 
+static VALUE
+do_scrub(VALUE str)
+{
+  VALUE out_str;
+  unsigned char *p, *end, *out_start, *out;
+  long len, out_len;
+
+  validate_utf8_input(str);
+
+  len = RSTRING_LEN(str);
+  p = RSTRING_PTR(str);
+  end = RSTRING_END(str);
+
+  out_start = out = (unsigned char *) malloc(len);
+  if (!out_start) {
+    rb_raise(rb_eNoMemError, "out of memory");
+  }
+
+  while (p < end) {
+    if ((*p & 0xf0) == 0xf0) {
+      if ((*p & 0xfc) == 0xfc) {
+        p += 6;
+      } else if ((*p & 0xf8) == 0xf8) {
+        p += 5;
+      } else {
+        p += 4;
+      }
+      *out++ = '?';
+    } else {
+      *out++ = *p++;
+    }
+  }
+  *out = '\0';
+
+  out_str = rb_enc_str_new(out_start, out - out_start, rb_utf8_encoding());
+  free(out_start);
+
+  return out_str;
+}
+
+static VALUE
+scrub(VALUE self, VALUE str)
+{
+  if (is_valid(self, str) == Qtrue) {
+    return rb_enc_str_new(RSTRING_PTR(str), RSTRING_LEN(str), rb_utf8_encoding());
+  }
+  return do_scrub(str);
+}
+
+static VALUE
+scrub_bang(VALUE self, VALUE str)
+{
+  VALUE repl;
+  if (is_valid(self, str) == Qtrue) {
+    return str;
+  }
+  repl = do_scrub(str);
+  if (!NIL_P(repl)) rb_str_replace(str, repl);
+  return str;
+}
+
 void
 Init_rejectu()
 {
   mRejectu = rb_define_module("Rejectu");
 
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
+  rb_define_singleton_method(mRejectu, "scrub", scrub, 1);
+  rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, 1);
 
   idEncoding = rb_intern("encoding");
   idTo_s = rb_intern("to_s");

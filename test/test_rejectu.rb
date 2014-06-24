@@ -69,4 +69,14 @@ class TestRejectu < Test::Unit::TestCase
     refute Rejectu::valid? s
   end
 
+  def test_scrub
+    assert_equal "? test string", Rejectu::scrub("\xf2\xa4\xb7\xa4 test string")
+  end
+
+  def test_scrub!
+    s = "\xf2\xa4\xb7\xa4 test string"
+    assert_equal "? test string", Rejectu::scrub!(s)
+    assert_equal "? test string", s
+  end
+
 end
