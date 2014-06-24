@@ -46,7 +46,7 @@ is_valid(VALUE self, VALUE str)
 
 #ifdef __SSE2__
   /* advance p until it's 16 byte aligned */
-  while (((uintptr_t) p & 0xf) != 0) {
+  while (((uintptr_t) p & 0xf) != 0 && p < end) {
     if ((*p & 0xf0) == 0xf0) {
       return Qfalse;
     }
