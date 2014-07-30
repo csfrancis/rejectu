@@ -64,7 +64,7 @@ is_valid(VALUE self, VALUE str)
     mask = _mm_movemask_epi8(chunk);
     if (mask) {
       /*
-       * If there's a multi-bye character somewhere in this chunk, we need to check if it's a codepoint
+       * If there's a multi-byte character somewhere in this chunk, we need to check if it's a codepoint
        * from the supplementary plane (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx).
        *
        * 1) Unpack the chunk into two halves (16-bit integers)
