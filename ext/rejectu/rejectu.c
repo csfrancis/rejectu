@@ -7,6 +7,7 @@
 static VALUE mRejectu = Qnil;
 static VALUE idEncoding, idTo_s;
 
+#ifdef __SSE2__
 static inline int
 has_utf8_supplementary_planes(__m128i v)
 {
@@ -14,6 +15,7 @@ has_utf8_supplementary_planes(__m128i v)
   v = _mm_cmpeq_epi16(v, _mm_set1_epi16(0x0f));
   return _mm_movemask_epi8(v) == 0 ? 0 : 1;
 }
+#endif
 
 static inline void
 validate_utf8_input(VALUE str)
