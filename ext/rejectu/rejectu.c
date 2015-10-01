@@ -7,6 +7,8 @@
 static VALUE mRejectu = Qnil;
 static VALUE idEncoding, idTo_s;
 
+static char *defaultToken = "?";
+
 #ifdef __SSE2__
 static inline int
 has_utf8_supplementary_planes(__m128i v)
@@ -176,7 +178,7 @@ scrub(int argc, VALUE *argv, VALUE self)
   }
 
   if (token == Qnil) {
-    token = rb_str_new2("?");
+    token = rb_str_new2(defaultToken);
   }
 
   return do_scrub(input, token);
@@ -190,7 +192,7 @@ scrub_bang(int argc, VALUE *argv, VALUE self)
 
   if (!is_valid(self, input)) {
     if (token == Qnil) {
-      token = rb_str_new2("?");
+      token = rb_str_new2(defaultToken);
     }
 
     VALUE repl = do_scrub(input, token);
