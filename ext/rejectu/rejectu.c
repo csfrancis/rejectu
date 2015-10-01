@@ -166,36 +166,40 @@ do_scrub(VALUE str, VALUE rplToken)
 }
 
 static VALUE
-scrub_with_token(VALUE self, VALUE str, VALUE rplToken)
+scrub(int argc, VALUE *argv, VALUE self)
 {
-  if (is_valid(self, str) == Qtrue) {
-    return rb_enc_str_new(RSTRING_PTR(str), RSTRING_LEN(str), rb_utf8_encoding());
+  VALUE input, token;
+  rb_scan_args(argc, argv, "11", &input, &token);
+
+  if (is_valid(self, input) == Qtrue) {
+    return input;
   }
-  return do_scrub(str, rplToken);
-}
 
-static VALUE
-scrub(VALUE self, VALUE str)
-{
-  return scrub_with_token(self, str, rb_str_new2("?"));
-}
-
-static VALUE
-scrub_bang_with_token(VALUE self, VALUE str, VALUE rplToken)
-{
-  VALUE repl;
-  if (is_valid(self, str) == Qtrue) {
-    return str;
+  if (token == Qnil) {
+    token = rb_str_new2("?");
   }
-  repl = do_scrub(str, rplToken);
-  if (!NIL_P(repl)) rb_str_replace(str, repl);
-  return str;
+
+  return do_scrub(input, token);
 }
 
 static VALUE
-scrub_bang(VALUE self, VALUE str)
+scrub_bang(int argc, VALUE *argv, VALUE self)
 {
-  return scrub_bang_with_token(self, str, rb_str_new2("?"));
+  VALUE input, token;
+  rb_scan_args(argc, argv, "11", &input, &token);
+
+  if (!is_valid(self, input)) {
+    if (token == Qnil) {
+      token = rb_str_new2("?");
+    }
+
+    VALUE repl = do_scrub(input, token);
+    if (!NIL_P(repl)) {
+      rb_str_replace(input, repl);
+    }
+  }
+
+  return input;
 }
 
 void
@@ -204,10 +208,8 @@ Init_rejectu()
   mRejectu = rb_define_module("Rejectu");
 
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
-  rb_define_singleton_method(mRejectu, "scrub", scrub, 1);
-  rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, 1);
-  rb_define_singleton_method(mRejectu, "scrub_with_token", scrub_with_token, 2);
-  rb_define_singleton_method(mRejectu, "scrub_with_token!", scrub_bang_with_token, 2);
+  rb_define_singleton_method(mRejectu, "scrub", scrub, -1);
+  rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, -1);
 
   idEncoding = rb_intern("encoding");
   idTo_s = rb_intern("to_s");

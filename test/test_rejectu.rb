@@ -77,8 +77,8 @@ class TestRejectu < Test::Unit::TestCase
     assert_equal "? test string", Rejectu.scrub("\xf2\xa4\xb7\xa4 test string")
   end
 
-  def test_scrub_with_token
-    assert_equal ". test string", Rejectu.scrub_with_token("\xf2\xa4\xb7\xa4 test string", ".")
+  def test_scrub_with_custom_token
+    assert_equal ". test string", Rejectu.scrub("\xf2\xa4\xb7\xa4 test string", ".")
   end
 
   def test_scrub!
@@ -87,9 +87,9 @@ class TestRejectu < Test::Unit::TestCase
     assert_equal "? test string", s
   end
 
-  def test_scrub_with_token!
+  def test_scrub_with_custom_token!
     s = "\xf2\xa4\xb7\xa4 test string"
-    assert_equal ". test string", Rejectu.scrub_with_token!(s, ".")
+    assert_equal ". test string", Rejectu.scrub!(s, ".")
     assert_equal ". test string", s
   end
 end
