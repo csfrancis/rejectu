@@ -125,11 +125,12 @@ is_valid(VALUE self, VALUE str)
 }
 
 static VALUE
-do_scrub(VALUE str, char rplToken)
+do_scrub(VALUE str, VALUE rplToken)
 {
   VALUE out_str;
   unsigned char *p, *end, *out_start, *out;
   long len, out_len;
+  char token = StringValueCStr(rplToken)[0];
 
   validate_utf8_input(str);
 
@@ -151,7 +152,7 @@ do_scrub(VALUE str, char rplToken)
       } else {
         p += 4;
       }
-      *out++ = rplToken;
+      *out++ = token;
     } else {
       *out++ = *p++;
     }
@@ -165,24 +166,36 @@ do_scrub(VALUE str, char rplToken)
 }
 
 static VALUE
-scrub(VALUE self, VALUE str)
+scrub_with_token(VALUE self, VALUE str, VALUE rplToken)
 {
   if (is_valid(self, str) == Qtrue) {
     return rb_enc_str_new(RSTRING_PTR(str), RSTRING_LEN(str), rb_utf8_encoding());
   }
-  return do_scrub(str, '?');
+  return do_scrub(str, rplToken);
 }
 
 static VALUE
-scrub_bang(VALUE self, VALUE str)
+scrub(VALUE self, VALUE str)
+{
+  return scrub_with_token(self, str, rb_str_new2("?"));
+}
+
+static VALUE
+scrub_bang_with_token(VALUE self, VALUE str, VALUE rplToken)
 {
   VALUE repl;
   if (is_valid(self, str) == Qtrue) {
     return str;
   }
-  repl = do_scrub(str, '?');
+  repl = do_scrub(str, rplToken);
   if (!NIL_P(repl)) rb_str_replace(str, repl);
   return str;
+}
+
+static VALUE
+scrub_bang(VALUE self, VALUE str)
+{
+  return scrub_bang_with_token(self, str, rb_str_new2("?"));
 }
 
 void
@@ -193,6 +206,8 @@ Init_rejectu()
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
   rb_define_singleton_method(mRejectu, "scrub", scrub, 1);
   rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, 1);
+  rb_define_singleton_method(mRejectu, "scrub_with_token", scrub_with_token, 2);
+  rb_define_singleton_method(mRejectu, "scrub_with_token!", scrub_bang_with_token, 2);
 
   idEncoding = rb_intern("encoding");
   idTo_s = rb_intern("to_s");
