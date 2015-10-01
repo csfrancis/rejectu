@@ -6,8 +6,7 @@
 
 static VALUE mRejectu = Qnil;
 static VALUE idEncoding, idTo_s;
-
-static char *defaultToken = "?";
+static VALUE defaultToken = Qnil;
 
 #ifdef __SSE2__
 static inline int
@@ -178,7 +177,7 @@ scrub(int argc, VALUE *argv, VALUE self)
   }
 
   if (token == Qnil) {
-    token = rb_str_new2(defaultToken);
+    token = defaultToken;
   }
 
   return do_scrub(input, token);
@@ -192,7 +191,7 @@ scrub_bang(int argc, VALUE *argv, VALUE self)
 
   if (!is_valid(self, input)) {
     if (token == Qnil) {
-      token = rb_str_new2(defaultToken);
+      token = defaultToken;
     }
 
     VALUE repl = do_scrub(input, token);
@@ -208,6 +207,7 @@ void
 Init_rejectu()
 {
   mRejectu = rb_define_module("Rejectu");
+  defaultToken = rb_str_new2("?");
 
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
   rb_define_singleton_method(mRejectu, "scrub", scrub, -1);
