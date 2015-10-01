@@ -125,7 +125,7 @@ is_valid(VALUE self, VALUE str)
 }
 
 static VALUE
-do_scrub(VALUE str)
+do_scrub(VALUE str, char rplToken)
 {
   VALUE out_str;
   unsigned char *p, *end, *out_start, *out;
@@ -151,7 +151,7 @@ do_scrub(VALUE str)
       } else {
         p += 4;
       }
-      *out++ = '?';
+      *out++ = rplToken;
     } else {
       *out++ = *p++;
     }
@@ -170,7 +170,7 @@ scrub(VALUE self, VALUE str)
   if (is_valid(self, str) == Qtrue) {
     return rb_enc_str_new(RSTRING_PTR(str), RSTRING_LEN(str), rb_utf8_encoding());
   }
-  return do_scrub(str);
+  return do_scrub(str, '?');
 }
 
 static VALUE
@@ -180,7 +180,7 @@ scrub_bang(VALUE self, VALUE str)
   if (is_valid(self, str) == Qtrue) {
     return str;
   }
-  repl = do_scrub(str);
+  repl = do_scrub(str, '?');
   if (!NIL_P(repl)) rb_str_replace(str, repl);
   return str;
 }
