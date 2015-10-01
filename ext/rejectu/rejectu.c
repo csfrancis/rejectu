@@ -208,6 +208,7 @@ Init_rejectu()
 {
   mRejectu = rb_define_module("Rejectu");
   defaultToken = rb_str_new2("?");
+  rb_global_variable(&defaultToken);
 
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
   rb_define_singleton_method(mRejectu, "scrub", scrub, -1);
