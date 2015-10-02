@@ -6,6 +6,7 @@
 
 static VALUE mRejectu = Qnil;
 static VALUE idEncoding, idTo_s;
+static VALUE defaultToken = Qnil;
 
 #ifdef __SSE2__
 static inline int
@@ -125,11 +126,12 @@ is_valid(VALUE self, VALUE str)
 }
 
 static VALUE
-do_scrub(VALUE str)
+do_scrub(VALUE str, VALUE rplToken)
 {
   VALUE out_str;
   unsigned char *p, *end, *out_start, *out;
   long len, out_len;
+  char token = StringValueCStr(rplToken)[0];
 
   validate_utf8_input(str);
 
@@ -151,7 +153,7 @@ do_scrub(VALUE str)
       } else {
         p += 4;
       }
-      *out++ = '?';
+      *out++ = token;
     } else {
       *out++ = *p++;
     }
@@ -165,34 +167,52 @@ do_scrub(VALUE str)
 }
 
 static VALUE
-scrub(VALUE self, VALUE str)
+scrub(int argc, VALUE *argv, VALUE self)
 {
-  if (is_valid(self, str) == Qtrue) {
-    return rb_enc_str_new(RSTRING_PTR(str), RSTRING_LEN(str), rb_utf8_encoding());
+  VALUE input, token;
+  rb_scan_args(argc, argv, "11", &input, &token);
+
+  if (is_valid(self, input) == Qtrue) {
+    return input;
   }
-  return do_scrub(str);
+
+  if (token == Qnil) {
+    token = defaultToken;
+  }
+
+  return do_scrub(input, token);
 }
 
 static VALUE
-scrub_bang(VALUE self, VALUE str)
+scrub_bang(int argc, VALUE *argv, VALUE self)
 {
-  VALUE repl;
-  if (is_valid(self, str) == Qtrue) {
-    return str;
+  VALUE input, token;
+  rb_scan_args(argc, argv, "11", &input, &token);
+
+  if (!is_valid(self, input)) {
+    if (token == Qnil) {
+      token = defaultToken;
+    }
+
+    VALUE repl = do_scrub(input, token);
+    if (!NIL_P(repl)) {
+      rb_str_replace(input, repl);
+    }
   }
-  repl = do_scrub(str);
-  if (!NIL_P(repl)) rb_str_replace(str, repl);
-  return str;
+
+  return input;
 }
 
 void
 Init_rejectu()
 {
   mRejectu = rb_define_module("Rejectu");
+  defaultToken = rb_str_new2("?");
+  rb_global_variable(&defaultToken);
 
   rb_define_singleton_method(mRejectu, "valid?", is_valid, 1);
-  rb_define_singleton_method(mRejectu, "scrub", scrub, 1);
-  rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, 1);
+  rb_define_singleton_method(mRejectu, "scrub", scrub, -1);
+  rb_define_singleton_method(mRejectu, "scrub!", scrub_bang, -1);
 
   idEncoding = rb_intern("encoding");
   idTo_s = rb_intern("to_s");

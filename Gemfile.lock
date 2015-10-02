@@ -1,14 +1,17 @@
 PATH
   remote: .
   specs:
-    rejectu (0.0.1)
+    rejectu (0.0.2)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    power_assert (0.2.4)
     rake (10.3.2)
     rake-compiler (0.9.2)
       rake
+    test-unit (3.1.4)
+      power_assert
 
 PLATFORMS
   ruby
@@ -16,3 +19,4 @@ PLATFORMS
 DEPENDENCIES
   rake-compiler (~> 0.9)
   rejectu!
+  test-unit (~> 3.1)
