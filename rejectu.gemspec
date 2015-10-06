@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rejectu'
-  s.version = '0.0.2'
+  s.version = '0.1.0'
   s.summary = 'Detects if a UTF-8 string supplementary plane code points'
   s.description = <<-DOC
     This gem detects if a UTF-8 encoded string contains characters from the UTF-8 supplementary
