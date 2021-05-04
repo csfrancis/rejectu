@@ -13,6 +13,6 @@ Gem::Specification.new do |s|
 
   s.files = `git ls-files`.split("\n")
   s.extensions = ['ext/rejectu/extconf.rb']
-  s.add_development_dependency 'rake-compiler', '~> 0.9'
-  s.add_development_dependency 'test-unit', '~> 3.1'
+  s.add_development_dependency 'rake-compiler'
+  s.add_development_dependency 'test-unit'
 end

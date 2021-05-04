@@ -37,7 +37,7 @@ is_valid(VALUE self, VALUE str)
   unsigned char *p, *end;
   long len, remain;
 #ifdef __SSE2__
-  __m128i chunk, part;
+  __m128i chunk;
   int mask;
 #endif
 
@@ -130,7 +130,7 @@ do_scrub(VALUE str, VALUE rplToken)
 {
   VALUE out_str;
   unsigned char *p, *end, *out_start, *out;
-  long len, out_len;
+  long len;
   char token = StringValueCStr(rplToken)[0];
 
   validate_utf8_input(str);
