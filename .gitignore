@@ -3,3 +3,5 @@
 /lib/rejectu/*.bundle
 /tmp/*
 *.gem
+Gemfile.lock
+
